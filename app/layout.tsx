@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col px-4 py-4 md:py-8`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-dvh flex flex-col px-4 py-4 md:py-8`}
       >
         <header className="flex flex-col items-center justify-center gap-2 px-4">
           <h1 className="text-lg md:text-3xl font-bold uppercase">Furdle</h1>
