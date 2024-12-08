@@ -2,13 +2,13 @@ import React from "react";
 import { cva } from "class-variance-authority";
 
 const keyStyles = cva(
-  "uppercase aspect-square flex-1 max-w-12 sm:max-w-16 text-lg md:text-2xl grid place-content-center rounded-lg ring-gray-500 text-white font-bold text-center",
+  "uppercase aspect-square flex-1 max-w-12 sm:max-w-16 text-lg md:text-2xl grid place-content-center rounded-lg ring-gray-500 dark:text-white font-bold text-center",
   {
     variants: {
       correctness: {
-        "2": "bg-green-500",
-        "1": "bg-yellow-500",
-        "0": "bg-gray-500",
+        "2": "bg-green-500 text-white",
+        "1": "bg-yellow-500 text-white",
+        "0": "bg-gray-500 text-white",
         none: "ring-1",
       },
     },
