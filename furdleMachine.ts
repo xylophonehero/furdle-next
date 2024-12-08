@@ -11,12 +11,16 @@ interface Guess {
 
 export type LetterStatus = "0" | "1" | "2";
 
-interface FurdleMachineContext {
+interface FurdleMachineInput {
+  allowedWords: string[];
+  blacklistedWords: string[];
+}
+
+interface FurdleMachineContext extends FurdleMachineInput {
   didWin: boolean;
   correctWord: string;
   currentGuess: string;
   guesses: Guess[];
-  allowedWords: string[];
   letterStatus: Record<string, LetterStatus>;
   errorText: string;
 }
@@ -30,7 +34,7 @@ export const furdleMachine = setup({
   types: {} as {
     context: FurdleMachineContext;
     events: FurdleMachineEvents;
-    input: { allowedWords: string[] };
+    input: FurdleMachineInput;
   },
   actors: {
     keyboard: fromCallback(({ sendBack }) => {
@@ -56,7 +60,7 @@ export const furdleMachine = setup({
     isPreviousGuess: ({ context }) =>
       context.guesses.some((guess) => guess.word === context.currentGuess),
     outOfGuesses: ({ context }) => context.guesses.length === 6,
-    correctWord: ({ context }) => context.guesses.at(-1)?.score === 243,
+    correctWord: ({ context }) => context.guesses.at(-1)?.score === 242,
   },
 }).createMachine({
   id: "furdle",
@@ -65,7 +69,10 @@ export const furdleMachine = setup({
     correctWord: "",
     currentGuess: "",
     guesses: [],
-    allowedWords: input.allowedWords,
+    allowedWords: input.allowedWords.filter(
+      (word) => !input.blacklistedWords.includes(word),
+    ),
+    blacklistedWords: input.blacklistedWords,
     letterStatus: {},
     errorText: "",
   }),
@@ -160,7 +167,11 @@ export const furdleMachine = setup({
         postProcessing: {
           always: [
             {
-              actions: assign({ didWin: true }),
+              actions: assign({
+                didWin: true,
+                correctWord: ({ context }) =>
+                  context.guesses.at(-1)?.word ?? "",
+              }),
               guard: "correctWord",
               target: "#complete",
             },
@@ -182,6 +193,14 @@ export const furdleMachine = setup({
       },
     },
     complete: {
+      entry: ({ context }) => {
+        window.localStorage.setItem(
+          "furdle-blacklisted-words",
+          JSON.stringify(
+            [context.correctWord, ...context.blacklistedWords].slice(0, 100),
+          ),
+        );
+      },
       id: "complete",
       type: "final",
     },

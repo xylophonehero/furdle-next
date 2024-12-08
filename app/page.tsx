@@ -14,10 +14,25 @@ declare global {
   }
 }
 
+const getBlacklistedWords = (): string[] => {
+  try {
+    const blacklistedWords = window.localStorage.getItem(
+      "furdle-blacklisted-words",
+    );
+    if (blacklistedWords) {
+      return JSON.parse(blacklistedWords);
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
 export default function Home() {
   const [snapshot, send, actor] = useActor(furdleMachine, {
     input: {
       allowedWords: words as string[],
+      blacklistedWords: getBlacklistedWords(),
     },
   });
   const {
@@ -34,7 +49,7 @@ export default function Home() {
   }, [actor]);
 
   return (
-    <div className="flex-1 flex flex-col gap-8 justify-center max-w-lg self-center w-full">
+    <div className="flex-1 flex flex-col gap-4 md:gap-8 justify-center max-w-lg self-center w-full">
       <div className="flex flex-col justify-center gap-2 w-full grow md:grow-0">
         {Array(6)
           .fill(0)
@@ -58,21 +73,25 @@ export default function Home() {
             {errorText}
           </div>
         )}
-        {snapshot.matches("complete") &&
-          (didWin ? (
-            <div className="bg-green-600 text-white flex items-center px-4 rounded">
-              You win!
-            </div>
-          ) : (
-            <div className="flex gap-4">
-              <div className="bg-red-600 text-white flex items-center px-4 rounded">
+        {snapshot.matches("complete") && (
+          <div className="flex gap-4">
+            {didWin ? (
+              <div className="bg-green-600 text-white flex items-center px-4 rounded">
+                You win!
+              </div>
+            ) : (
+              <div className="bg-orange-500 text-white flex items-center px-4 rounded">
                 You lose!. The word was {correctWord}
               </div>
-              <button className="slef-center" onClick={() => window.location.reload()}>
-                Play again?
-              </button>
-            </div>
-          ))}
+            )}
+            <button
+              className="self-center border border-gray-400 p-2 rounded hover:bg-white/10"
+              onClick={() => window.location.reload()}
+            >
+              Play again?
+            </button>
+          </div>
+        )}
       </div>
       <Keyboard
         letterStatus={letterStatus}
