@@ -9,6 +9,12 @@ interface Guess {
   score: number;
 }
 
+declare global {
+  interface Window {
+    furdle: any;
+  }
+}
+
 export type LetterStatus = "0" | "1" | "2";
 
 interface FurdleMachineInput {
@@ -28,7 +34,8 @@ interface FurdleMachineContext extends FurdleMachineInput {
 type FurdleMachineEvents =
   | { type: "guess.submit" }
   | { type: "guess.delete" }
-  | { type: "guess.letter"; letter: string };
+  | { type: "guess.letter"; letter: string }
+  | { type: "beforeunload" };
 
 export const furdleMachine = setup({
   types: {} as {
@@ -36,11 +43,26 @@ export const furdleMachine = setup({
     events: FurdleMachineEvents;
     input: FurdleMachineInput;
   },
+  actions: {
+    storeGame: () => {},
+    deleteSavedGame: () => {
+      window.localStorage.removeItem("furdle-saved-game");
+    },
+    blacklistWord: ({ context }) => {
+      window.localStorage.setItem(
+        "furdle-blacklisted-words",
+        JSON.stringify(
+          [context.correctWord, ...context.blacklistedWords].slice(0, 100),
+        ),
+      );
+    },
+  },
   actors: {
     keyboard: fromCallback(({ sendBack }) => {
-      document.addEventListener("keydown", (event) => {
-        if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
+      const handleKeydown = (event: KeyboardEvent) => {
+        if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) {
           return;
+        }
         if (event.key === "Enter") {
           sendBack({ type: "guess.submit" });
         } else if (event.key === "Backspace") {
@@ -48,9 +70,16 @@ export const furdleMachine = setup({
         } else if (event.key.match(/[a-z]/i)) {
           sendBack({ type: "guess.letter", letter: event.key.toLowerCase() });
         }
-      });
+      };
+      document.addEventListener("keydown", handleKeydown);
       return () => {
-        document.removeEventListener("keydown", () => {});
+        document.removeEventListener("keydown", handleKeydown);
+      };
+    }),
+    reloadListener: fromCallback(({ sendBack }) => {
+      window.addEventListener("beforeunload", sendBack);
+      return () => {
+        window.removeEventListener("beforeunload", sendBack);
       };
     }),
   },
@@ -82,6 +111,14 @@ export const furdleMachine = setup({
   initial: "playing",
   states: {
     playing: {
+      invoke: {
+        src: "reloadListener",
+      },
+      on: {
+        beforeunload: {
+          actions: "storeGame",
+        },
+      },
       initial: "guessing",
       states: {
         guessing: {
@@ -193,14 +230,7 @@ export const furdleMachine = setup({
       },
     },
     complete: {
-      entry: ({ context }) => {
-        window.localStorage.setItem(
-          "furdle-blacklisted-words",
-          JSON.stringify(
-            [context.correctWord, ...context.blacklistedWords].slice(0, 100),
-          ),
-        );
-      },
+      entry: ["blacklistWord", "deleteSavedGame"],
       id: "complete",
       type: "final",
     },
