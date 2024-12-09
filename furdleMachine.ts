@@ -71,7 +71,7 @@ export const furdleMachine = setup({
           sendBack({ type: "guess.submit" });
         } else if (event.key === "Backspace") {
           sendBack({ type: "guess.delete" });
-        } else if (event.key.match(/[a-z]/i)) {
+        } else if (event.key.match(/^[a-z]$/)) {
           sendBack({ type: "guess.letter", letter: event.key.toLowerCase() });
         }
       };
