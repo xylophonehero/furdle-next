@@ -30,11 +30,22 @@ export function fromTrinary(trinary: string) {
 }
 
 export function calculateScore(guess: string, word: string) {
+  const indexesTaken: number[] = [];
   const trinaryForm = guess
     .split("")
     .map((char, index) => {
       if (char === word[index]) return "2";
-      if (word.includes(char)) return "1";
+      if (!word.includes(char)) return "0";
+      const indexOfCharInWord = word
+        .split("")
+        .findIndex(
+          (c, i) =>
+            c === char && guess[i] !== word[i] && !indexesTaken.includes(i),
+        );
+      if (indexOfCharInWord !== -1) {
+        indexesTaken.push(indexOfCharInWord);
+        return "1";
+      }
       return "0";
     })
     .join("");
