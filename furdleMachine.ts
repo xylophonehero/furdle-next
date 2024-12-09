@@ -1,19 +1,17 @@
-import { assign, enqueueActions, fromCallback, log, not, setup } from "xstate";
+import {
+  assign,
+  enqueueActions,
+  fromCallback,
+  fromPromise,
+  not,
+  setup,
+  spawnChild,
+} from "xstate";
+import { calculateScore, fromTrinary, toTrinary } from "./utils";
 
 import guessesFile from "./guesses.json";
-import { calculateScore, fromTrinary, toTrinary } from "./utils";
+import { Guess } from "./types";
 const guesses = guessesFile as string[];
-
-interface Guess {
-  word: string;
-  score: number;
-}
-
-declare global {
-  interface Window {
-    furdle: any;
-  }
-}
 
 export type LetterStatus = "0" | "1" | "2";
 
@@ -58,6 +56,12 @@ export const furdleMachine = setup({
     },
   },
   actors: {
+    logGame: fromPromise(({ input }) =>
+      fetch("/api/log-game", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    ),
     keyboard: fromCallback(({ sendBack }) => {
       const handleKeydown = (event: KeyboardEvent) => {
         if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) {
@@ -105,15 +109,17 @@ export const furdleMachine = setup({
     letterStatus: {},
     errorText: "",
   }),
-  invoke: {
-    src: "keyboard",
-  },
   initial: "playing",
   states: {
     playing: {
-      invoke: {
-        src: "reloadListener",
-      },
+      invoke: [
+        {
+          src: "keyboard",
+        },
+        {
+          src: "reloadListener",
+        },
+      ],
       on: {
         beforeunload: {
           actions: "storeGame",
@@ -202,6 +208,7 @@ export const furdleMachine = setup({
           ],
         },
         postProcessing: {
+          entry: [],
           always: [
             {
               actions: assign({
@@ -230,9 +237,16 @@ export const furdleMachine = setup({
       },
     },
     complete: {
-      entry: ["blacklistWord", "deleteSavedGame"],
+      entry: [
+        "blacklistWord",
+        "deleteSavedGame",
+        spawnChild("logGame", {
+          input: ({ context }) => ({
+            guesses: context.guesses,
+          }),
+        }),
+      ],
       id: "complete",
-      type: "final",
     },
   },
 });

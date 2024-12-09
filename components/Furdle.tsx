@@ -8,12 +8,6 @@ import React, { useEffect } from "react";
 import { Guess } from "./Guess";
 import { Keyboard } from "./Keyboard";
 
-declare global {
-  interface Window {
-    furdle: any;
-  }
-}
-
 const getBlacklistedWords = (): string[] => {
   try {
     const blacklistedWords = window.localStorage.getItem(

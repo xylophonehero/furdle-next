@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.47.3",
     "@xstate/react": "^5.0.0",
     "class-variance-authority": "^0.7.1",
     "next": "15.0.4",
