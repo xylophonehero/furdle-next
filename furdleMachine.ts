@@ -243,6 +243,7 @@ export const furdleMachine = setup({
         spawnChild("logGame", {
           input: ({ context }) => ({
             guesses: context.guesses,
+            correctWord: context.correctWord,
           }),
         }),
       ],
