@@ -2,6 +2,8 @@ import { Guess } from "@/components/Guess";
 import { supabase } from "@/utils/supabase/server";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+
 export default async function Logs() {
   const { data, error } = await supabase
     .from("games")
@@ -15,13 +17,12 @@ export default async function Logs() {
 
   if (!data) return <div>Loading...</div>;
 
-  console.log(data);
   return (
     <div className="mt-10">
       <ul className="flex flex-col gap-8">
         {data.map((game) => (
           <li className="flex flex-col gap-2" key={game.id}>
-            {Array(5)
+            {Array(6)
               .fill(0)
               .map((_, index) => (
                 <Guess
