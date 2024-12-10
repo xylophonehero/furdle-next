@@ -86,7 +86,7 @@ function Furdle() {
             );
           })}
       </div>
-      <div className="h-16 flex justify-center">
+      <div className="h-10 flex justify-center">
         {errorText && (
           <div className="bg-red-600 text-white flex items-center px-4 rounded">
             {errorText}
@@ -104,7 +104,7 @@ function Furdle() {
               </div>
             )}
             <button
-              className="self-center border border-gray-400 p-2 rounded hover:bg-white/10"
+              className="border border-gray-400 px-2 rounded hover:bg-white/10"
               onClick={() => window.location.reload()}
             >
               Play again?
